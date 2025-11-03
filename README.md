@@ -1,6 +1,7 @@
 # Yale_VE_CompBio
 
 ## Utilizing virus genomic surveillance to predict vaccine effectiveness     
+![Sequence overview](https://github.com/jiyekwon/Yale_VE_CompBio/blob/main/images/Figure0_cases_threeDrops.jpeg)
 
 
 -----------
