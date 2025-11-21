@@ -9,8 +9,10 @@ ds1<- readRDS(file = "../Yale_VE_CompBio/Yale_VE_CompBio/data/EXPORT_inla_ds1.RD
 # trimmed_list<- readRDS(file = "../Yale_VE_CompBio/Yale_VE_CompBio/data/beta_export_rw2_251121.RDS")# RW2 version
 
 #######################################
-# INLA master code
-# NEVER TAKE THE FUNCTIONS OF MEANS; 
+# INLA master code; 
+# NOTE: NEVER TAKE FUNCTIONS OF MEANS; 
+# Instructions: load ds1 and run before overview block (gives 100%, 10,000 simulations at each time point)
+# If you want to visualize the results only load trimmed list and run after overview block (95% CrI only)
 #######################################
 
 ######################################################
@@ -193,6 +195,7 @@ random_wide_df <- combined_df_R %>%
 # RUN one more set.seed and proceed to INLA_viz.R
 
 ###############################################################################
+# OVERVIEW
 # 1. combine two simulations to make a full 10,000 simulation dataframe (100%)
 # 2. add fixed effect to each of the random effects 
 # 3. Retain 95% crI for each week. (trimmed_list) represents betas 
