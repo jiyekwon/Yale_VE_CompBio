@@ -81,7 +81,7 @@ v4<- cases_NE %>%
                 ymax = Inf), 
             fill = "#F0F0F0", alpha = 0.3, colour = NA)+
   geom_point(alpha = 0.6) +
-  ylab("Amino acid (AA) differences, \n 2023-2024 XBB 1.5 vaccine formulation") +
+  ylab("Amino acid substitutions, \n 2023-2024 XBB 1.5 vaccine formulation") +
   xlab("Collection date (week)") +
   scale_fill_manual(values = colors,  "Nextclade \n assignment")+ 
   scale_color_manual(values = colors,  "Nextclade \n assignment")+ 
@@ -150,5 +150,5 @@ v_gd<- ggplot(df_long, aes(x = week.date, y = avg_distance_rolling, color = loca
 
 
 ne_plot<- v4 +v_gd + plot_annotation(tag_levels = "A")
-# ggsave(plot = ne_plot, filename = "./24draft_figures/RevisionFigure_NE_XBBFormula.jpeg",
-#        device = "jpeg", width = 18, height = 7, dpi = 200)
+ggsave(plot = ne_plot, filename = "./24draft_figures/RevisionFigure_NE_XBBFormula.jpeg",
+       device = "jpeg", width = 16, height = 8, dpi = 250)
