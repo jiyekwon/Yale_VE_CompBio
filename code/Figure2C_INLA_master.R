@@ -4,9 +4,9 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(lubridate)
-ds1<- readRDS(file = "./24draft_data/EXPORT_inla_ds1.RDS") 
-# trimmed_list<- readRDS(file = "./CovidBAA_INLA/beta_export_240908.RDS") # AR1 version 
-# trimmed_list<- readRDS(file = "./CovidBAA_INLA/beta_export_rw2_251121.RDS")# RW2 version
+ds1<- readRDS(file = "../Yale_VE_CompBio/Yale_VE_CompBio/data/EXPORT_inla_ds1.RDS") 
+# trimmed_list<- readRDS(file = "../Yale_VE_CompBio/Yale_VE_CompBio/data/beta_export_240908.RDS") # AR1 version
+# trimmed_list<- readRDS(file = "../Yale_VE_CompBio/Yale_VE_CompBio/data/beta_export_rw2_251121.RDS")# RW2 version
 
 #######################################
 # INLA master code
