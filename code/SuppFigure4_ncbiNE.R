@@ -92,7 +92,7 @@ v4<- cases_NE %>%
              col='#8B8682', lty=2,linewidth = 0.8)+
   scale_x_date(limits = as.Date(c("2023-03-01", "2024-09-01")),
                date_breaks = "1 month", date_labels =  "%b %Y")+
-  theme(axis.text.x=element_text(angle=60, hjust=1), legend.position="bottom",
+  theme(axis.text.x=element_text(angle=60, hjust=1), legend.position="top",
         legend.spacing.x = unit(0.5, "cm"))+
   guides(col = guide_legend(override.aes = list(alpha = 1.0), ncol = 8, direction = "horizontal" ),
          fill = guide_legend(override.aes = list(alpha = 1.0), ncol = 8, direction = "horizontal" ))+
@@ -105,6 +105,7 @@ v4
 # per week summary (3 week rolling average)
 ################################################### 
 ct_mean<- read.csv("./2023_24vax_CT_rolling_avg_3weekGD.csv")
+
 # 3-week rolling average
 gd_mean_NE<- cases_NE%>%
   group_by(week.date) %>% 
@@ -113,17 +114,19 @@ gd_mean_NE<- cases_NE%>%
   .[, `New England` := frollmean(avg_distance, n = 3, fill = NA)] 
 
 
-gd_mean_CT<- ct_mean %>% select(week.date, avg_distance, avg_distance_rolling) %>% 
+gd_mean_CT<- ct_mean %>% select(week.date, avg_distance_rolling, avg_distance) %>% 
   rename(avg_CT = avg_distance,
-         Connecticut = avg_distance_rolling)
+         Yale = avg_distance_rolling)
+# %>%mutate(location = "Yale")
 gd_mean_CT$week.date<- as.Date(gd_mean_CT$week.date, "%Y-%m-%d")
 gd_combined<- full_join(gd_mean_NE, gd_mean_CT)
 
 
 df_long <- gd_combined %>%
   select(-c(avg_distance, avg_CT))%>%
-  pivot_longer( cols = `New England`:Connecticut, names_to = "location",
+  pivot_longer( cols = `New England`:Yale, names_to = "location",
     values_to = "avg_distance_rolling")
+
 
 v_gd<- ggplot(df_long, aes(x = week.date, y = avg_distance_rolling, color = location)) +
   geom_rect(aes(xmin = as.Date("2023-03-01"), 
@@ -133,7 +136,7 @@ v_gd<- ggplot(df_long, aes(x = week.date, y = avg_distance_rolling, color = loca
             fill = "#F0F0F0", alpha = 0.3, colour = NA)+
   geom_line(size = 1) +
   geom_point(alpha = 0.6) + # Optional: add points for data clarity
-  scale_color_manual(values = c("New England" = "#9E4058FF", "Connecticut" = "#4151B0FF")) +
+  scale_color_manual(values = c("New England" = "#9E4058FF", "Yale" = "#4151B0FF")) +
   labs(title = "",
        y = "Amino acid substitutions, \n 2023-2024 XBB 1.5 vaccine formulation \n (3-week rolling average)",
        color = "Location") +
@@ -144,11 +147,115 @@ v_gd<- ggplot(df_long, aes(x = week.date, y = avg_distance_rolling, color = loca
              col='#8B8682', lty=2,linewidth = 0.8)+
   scale_x_date(limits = as.Date(c("2023-03-01", "2024-09-01")),
                date_breaks = "1 month", date_labels =  "%b %Y")+
-  theme(axis.text.x=element_text(angle=60, hjust=1), legend.position="bottom",
+  theme(axis.text.x=element_text(angle=60, hjust=1), legend.position="top",
         legend.spacing.x = unit(0.5, "cm"))
 
 
-
 ne_plot<- v4 +v_gd + plot_annotation(tag_levels = "A")
-ggsave(plot = ne_plot, filename = "./24draft_figures/RevisionFigure_NE_XBBFormula.jpeg",
-       device = "jpeg", width = 16, height = 8, dpi = 250)
+
+
+
+###################################################
+# State level 
+################################################### 
+
+# 3-week rolling average (state level)
+gd_mean_states <- cases_NE %>%
+  group_by(week.date, USA) %>% # Group by both week and state
+  summarise( avg_distance = mean(bnt_distance_spike_vax3, na.rm = TRUE),
+             .groups = 'drop') %>%
+  ungroup()
+
+gd_mean_states<- gd_mean_states %>% 
+  group_by(USA)%>% 
+  mutate( avg_distance_rolling = data.table::frollmean(avg_distance, n = 3, fill = NA) ) %>%
+  ungroup() %>%
+  rename(avg_state = avg_distance,
+         avg_distance_rolling = avg_distance_rolling, 
+         location = USA ) %>%
+  select(week.date, location, avg_distance_rolling)
+
+# combine with Yale info
+gd_mean_CT2<- ct_mean %>% select(week.date, avg_distance_rolling) %>% 
+  rename(
+    avg_distance_rolling = avg_distance_rolling ) %>%
+  mutate(location = "Yale")
+gd_mean_CT2$week.date<- as.Date(gd_mean_CT2$week.date, "%Y-%m-%d")
+gd_combined2<- full_join(gd_mean_states, gd_mean_CT2)
+
+# making sure each week is represented, if missing then NA 
+gd_combined2<- gd_combined2 %>% group_by(location) %>% 
+  tidyr::complete(week.date=seq.Date(min(week.date, na.rm=T), 
+                                     max(week.date, na.rm=T), 'week'), 
+                fill=list(gd_combined2=NA))
+
+
+# Separate the Yale data (the baseline line)
+yale_data <- gd_combined2 %>%
+  filter(location == "Yale") %>%
+  rename(yale_distance = avg_distance_rolling) %>%
+  ungroup() %>%
+  dplyr::select(week.date, yale_distance)
+
+# all non-Yale locations)
+facet_data <- gd_combined2 %>%
+  filter(location != "Yale")
+df_facet_compare <- left_join(facet_data, yale_data, by = "week.date")
+
+
+# facet label 
+n_data <- cases_NE %>%
+  group_by(USA) %>%
+  summarise(n = n(), .groups = 'drop') %>%
+  rename(location = USA) %>%
+  mutate(facet_label = paste0(location, " (n=", n, ")"))
+
+
+df_facet_labeled <- left_join(df_facet_compare, n_data, by = "location") %>%
+  mutate(facet_label = factor(facet_label, levels = unique(facet_label[order(location)])))
+
+
+
+
+# Plot C -----------------------# 
+
+v_facet_gd_n <- ggplot(df_facet_labeled, aes(x = as.Date(week.date))) +
+  geom_rect(aes(xmin = as.Date("2023-03-01"),
+                xmax = as.Date("2023-09-15"),
+                ymin = -Inf,
+                ymax = Inf),
+            fill = "#F0F0F0", alpha = 0.3, colour = NA) +
+  
+  geom_line(aes(y = yale_distance, color = "Yale"),
+            size = 1, alpha = 1, linetype = "solid") +
+
+  geom_line(aes(y = avg_distance_rolling, color = location),
+            size = 1.2) +
+  geom_point(aes(y = avg_distance_rolling, color = location),
+             alpha = 0.8) +
+  
+  facet_wrap(~ facet_label, ncol = 3) +  
+
+  scale_color_manual(
+    name = "Location",
+    values = c("Yale" = "#4151B0FF",
+               "CT" = "#98768EFF","MA" =  "#B08BA5FF", "ME" = "#C7A2B6FF",
+               "NH" =  "#DFBBC8FF", "NJ" = "#FFC680FF", "NY" =  "#FFB178FF",
+               "PA"= "#DB8872FF", "RI" = "#A56457FF",  "VT" = "#C2CAE3FF") ) +
+  labs( y = "Amino acid substitutions, \n 2023-2024 XBB 1.5 vaccine formulation \n (3-week rolling average)",
+    x = "Collection Date") +
+  ylim(0, 60) +
+  theme_classic(base_size = 13)+
+  geom_hline(yintercept=0, col='gray', lty=2)+
+  geom_vline(xintercept=as.Date("2023-09-15"), 
+             col='#8B8682', lty=2,linewidth = 0.8)+
+  scale_x_date(limits = as.Date(c("2023-03-01", "2024-09-01")),
+               date_breaks = "2 months", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1), legend.position="bottom",
+        strip.background = element_rect(fill = "gray95"), 
+        legend.spacing.x = unit(0.5, "cm"))
+
+ne_final<- ne_plot/v_facet_gd_n+ plot_annotation(tag_levels = "A") +plot_layout(heights = c(2,3))
+
+ggsave(plot = ne_final, filename = "./24draft_figures/RevisionFigure_NE_XBBFormula.jpeg",
+       device = "jpeg", width = 16, height = 20, dpi = 250)
