@@ -3,6 +3,7 @@ library(dplyr)
 library(zoo)
 library(ggplot2)
 library(ggpubr)
+library(lubridate)
 # load data --------------
 data_plot_2a<- readRDS("../Yale_VE_CompBio/Yale_VE_CompBio/data/Fig2A_data_plot_2a.RDS")
 yale_drop1 <- readRDS("../Yale_VE_CompBio/Yale_VE_CompBio/data/yale_drop1.RDS")
