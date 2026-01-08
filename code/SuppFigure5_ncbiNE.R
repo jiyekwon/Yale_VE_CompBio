@@ -7,7 +7,7 @@ library(ggsci)
 library(stringr)
 library(data.table)
 library(tidyr)
-
+library(patchwork)
 
 # load data --------------
 ne_AA <- seqinr::read.alignment(file ="../Yale_VE_CompBio/Yale_VE_CompBio/data/NE.aligned_S_aa.fasta", format="fasta")
@@ -245,7 +245,7 @@ v_facet_gd_n <- ggplot(df_facet_labeled, aes(x = as.Date(week.date))) +
   labs( y = "Amino acid substitutions, \n 2023-2024 XBB 1.5 vaccine formulation \n (3-week rolling average)",
     x = "Collection Date") +
   ylim(0, 60) +
-  theme_classic(base_size = 13)+
+  theme_classic(base_size = 15)+
   geom_hline(yintercept=0, col='gray', lty=2)+
   geom_vline(xintercept=as.Date("2023-09-15"), 
              col='#8B8682', lty=2,linewidth = 0.8)+
