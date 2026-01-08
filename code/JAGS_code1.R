@@ -1,7 +1,7 @@
 ######################################################################
 # This is the baseline meta-regression JAGS code 
 # GOAL: eta_1 or \gamma_1 parameter estimation 
-# Kwon, J. one MONTH out; not a mean of all the block
+# 
 ######################################################################
 library(rjags)
 library(dplyr)
